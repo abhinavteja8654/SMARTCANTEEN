@@ -34,7 +34,7 @@ export default function MenuManagementView() {
     try {
       setLoading(true);
       const res = await api.get('/food-items');
-      setItems(res.data);
+      setItems(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.warn('Using default demo menu items', err);
       setItems([

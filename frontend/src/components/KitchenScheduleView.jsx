@@ -35,7 +35,7 @@ export default function KitchenScheduleView() {
     try {
       setLoading(true);
       const res = await api.get(`/prep-plans?date=${selectedDate}`);
-      setPlans(res.data);
+      setPlans(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.warn('Using demo kitchen plans', err);
       setPlans([

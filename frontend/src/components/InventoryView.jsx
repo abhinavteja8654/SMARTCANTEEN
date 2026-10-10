@@ -31,7 +31,7 @@ export default function InventoryView() {
     try {
       setLoading(true);
       const res = await api.get('/inventory');
-      setItems(res.data);
+      setItems(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.warn('Using default demo inventory', err);
       setItems([

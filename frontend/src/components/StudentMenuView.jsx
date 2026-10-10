@@ -40,7 +40,7 @@ export default function StudentMenuView({ currentUser }) {
     try {
       setLoading(true);
       const res = await api.get('/food-items');
-      setFoodItems(res.data);
+      setFoodItems(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.warn('Using default demo student food items', err);
       setFoodItems([
@@ -58,7 +58,7 @@ export default function StudentMenuView({ currentUser }) {
   const fetchMyOrders = async () => {
     try {
       const res = await api.get('/preorders/my-orders');
-      setMyOrders(res.data);
+      setMyOrders(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.warn('Using default demo student pre-orders', err);
       setMyOrders([

@@ -37,7 +37,11 @@ export default function DashboardView({ onNavigateTo }) {
     try {
       setLoading(true);
       const res = await api.get('/dashboard/stats');
-      setStats(res.data);
+      if (res.data && typeof res.data === 'object' && Array.isArray(res.data.weeklyDemandVsWaste)) {
+        setStats(res.data);
+      } else {
+        throw new Error('Invalid format');
+      }
     } catch (err) {
       console.warn('Using default demo stats', err);
       setStats({

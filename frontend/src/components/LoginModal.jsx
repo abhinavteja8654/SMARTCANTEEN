@@ -23,47 +23,73 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
     setEmail(creds.email);
     setPassword(creds.password);
-    handleSubmit(null, creds);
+    
+    // Instantly authenticate
+    const userObj = {
+      id: creds.id,
+      name: creds.name,
+      email: creds.email,
+      role: creds.role,
+      token: 'demo-jwt-' + creds.role.toLowerCase()
+    };
+    localStorage.setItem('smartcanteen_token', userObj.token);
+    localStorage.setItem('sc_user', JSON.stringify(userObj));
+    onLoginSuccess(userObj);
+    onClose();
   };
 
-  const handleSubmit = async (e, directCreds) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setErrorMsg('');
     setLoading(true);
-
-    const submitEmail = directCreds ? directCreds.email : email;
-    const submitPass = directCreds ? directCreds.password : password;
 
     try {
       if (isRegister) {
         const res = await api.post('/auth/register', {
           name,
-          email: submitEmail,
-          password: submitPass,
+          email,
+          password,
           role
         });
-        localStorage.setItem('smartcanteen_token', res.data.token);
-        onLoginSuccess(res.data);
+        const user = (res.data && typeof res.data === 'object' && res.data.role) ? res.data : {
+          id: Date.now(),
+          name,
+          email,
+          role,
+          token: 'demo-jwt-registered'
+        };
+        localStorage.setItem('smartcanteen_token', user.token || 'demo-token');
+        localStorage.setItem('sc_user', JSON.stringify(user));
+        onLoginSuccess(user);
       } else {
         const res = await api.post('/auth/login', {
-          email: submitEmail,
-          password: submitPass
+          email,
+          password
         });
-        localStorage.setItem('smartcanteen_token', res.data.token);
-        onLoginSuccess(res.data);
+        const user = (res.data && typeof res.data === 'object' && res.data.role) ? res.data : {
+          id: email.includes('admin') ? 1 : email.includes('chef') ? 2 : 3,
+          name: email.includes('admin') ? 'Canteen Administrator' : email.includes('chef') ? 'Head Chef Ramesh' : 'Student Patron',
+          email,
+          role: email.includes('admin') ? 'ADMIN' : email.includes('chef') ? 'STAFF' : 'STUDENT',
+          token: 'demo-jwt-login'
+        };
+        localStorage.setItem('smartcanteen_token', user.token || 'demo-token');
+        localStorage.setItem('sc_user', JSON.stringify(user));
+        onLoginSuccess(user);
       }
       onClose();
     } catch (err) {
-      console.warn('Backend login error, utilizing demo session fallback', err);
-      // Demo session fallback
-      const user = directCreds || {
+      console.warn('Backend login fallback active', err);
+      const fallbackUser = {
         id: Date.now(),
-        name: isRegister ? name : (submitEmail.includes('admin') ? 'Administrator' : submitEmail.includes('chef') ? 'Head Chef Ramesh' : 'Student Patron'),
-        email: submitEmail,
-        role: isRegister ? role : (submitEmail.includes('admin') ? 'ADMIN' : submitEmail.includes('chef') ? 'STAFF' : 'STUDENT')
+        name: isRegister ? name : (email.includes('admin') ? 'Canteen Administrator' : email.includes('chef') ? 'Head Chef Ramesh' : 'Student Patron'),
+        email,
+        role: isRegister ? role : (email.includes('admin') ? 'ADMIN' : email.includes('chef') ? 'STAFF' : 'STUDENT'),
+        token: 'demo-jwt-fallback'
       };
-      localStorage.setItem('smartcanteen_token', 'demo-jwt-token');
-      onLoginSuccess(user);
+      localStorage.setItem('smartcanteen_token', fallbackUser.token);
+      localStorage.setItem('sc_user', JSON.stringify(fallbackUser));
+      onLoginSuccess(fallbackUser);
       onClose();
     } finally {
       setLoading(false);
@@ -94,29 +120,29 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
         {!isRegister && (
           <div className="space-y-1.5 pt-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              1-Click Demo Logins:
+              1-Click Instant Demo Logins:
             </span>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => handleQuickLogin('ADMIN')}
-                className="p-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 text-xs font-semibold flex flex-col items-center gap-1 transition"
+                className="p-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 text-xs font-semibold flex flex-col items-center gap-1 transition shadow-xs"
               >
-                <ShieldCheck className="w-4 h-4 text-purple-600" /> Admin
+                <ShieldCheck className="w-5 h-5 text-purple-600" /> Admin
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickLogin('STAFF')}
-                className="p-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-semibold flex flex-col items-center gap-1 transition"
+                className="p-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-semibold flex flex-col items-center gap-1 transition shadow-xs"
               >
-                <ChefHat className="w-4 h-4 text-amber-600" /> Chef / Staff
+                <ChefHat className="w-5 h-5 text-amber-600" /> Chef / Staff
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickLogin('STUDENT')}
-                className="p-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-900 text-xs font-semibold flex flex-col items-center gap-1 transition"
+                className="p-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-900 text-xs font-semibold flex flex-col items-center gap-1 transition shadow-xs"
               >
-                <GraduationCap className="w-4 h-4 text-blue-600" /> Student
+                <GraduationCap className="w-5 h-5 text-blue-600" /> Student
               </button>
             </div>
           </div>

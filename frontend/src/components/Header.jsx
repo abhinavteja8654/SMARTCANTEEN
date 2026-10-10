@@ -10,6 +10,7 @@ import {
   ChefHat, 
   GraduationCap, 
   LogOut,
+  LogIn,
   SlidersHorizontal
 } from 'lucide-react';
 
@@ -18,7 +19,8 @@ export default function Header({
   setCurrentTab, 
   currentUser, 
   onSwitchRole, 
-  onLogout 
+  onLogout,
+  onOpenLogin
 }) {
   const tabs = [
     { id: 'dashboard', label: 'Executive Insights', icon: TrendingUp, roles: ['ADMIN', 'STAFF'] },
@@ -30,7 +32,8 @@ export default function Header({
     { id: 'student_order', label: 'Pre-Order & RSVP', icon: ShoppingBag, roles: ['STUDENT', 'ADMIN', 'STAFF'] },
   ];
 
-  const visibleTabs = tabs.filter(t => !currentUser || t.roles.includes(currentUser.role));
+  const userRole = (currentUser && typeof currentUser === 'object' && currentUser.role) ? currentUser.role : 'ADMIN';
+  const visibleTabs = tabs.filter(t => !currentUser || t.roles.includes(userRole));
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
@@ -38,7 +41,7 @@ export default function Header({
         <div className="flex items-center justify-between h-16">
           
           {/* Logo & Subtitle */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setCurrentTab('dashboard')}>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
               <UtensilsCrossed className="w-5 h-5" />
             </div>
@@ -55,19 +58,26 @@ export default function Header({
 
           {/* User profile & Demo Quick Switcher */}
           <div className="flex items-center gap-3">
-            {currentUser && (
+            {currentUser && typeof currentUser === 'object' && currentUser.name ? (
               <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 px-3">
                 <div className="flex items-center gap-2 text-xs font-medium text-slate-700">
-                  {currentUser.role === 'ADMIN' && <ShieldCheck className="w-4 h-4 text-purple-600" />}
-                  {currentUser.role === 'STAFF' && <ChefHat className="w-4 h-4 text-amber-600" />}
-                  {currentUser.role === 'STUDENT' && <GraduationCap className="w-4 h-4 text-blue-600" />}
+                  {userRole === 'ADMIN' && <ShieldCheck className="w-4 h-4 text-purple-600" />}
+                  {userRole === 'STAFF' && <ChefHat className="w-4 h-4 text-amber-600" />}
+                  {userRole === 'STUDENT' && <GraduationCap className="w-4 h-4 text-blue-600" />}
                   <span>{currentUser.name}</span>
                   <span className="text-slate-400">|</span>
                   <span className="font-bold uppercase tracking-wider text-[10px] bg-slate-200 px-1.5 py-0.5 rounded">
-                    {currentUser.role}
+                    {userRole}
                   </span>
                 </div>
               </div>
+            ) : (
+              <button
+                onClick={onOpenLogin}
+                className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition"
+              >
+                <LogIn className="w-3.5 h-3.5" /> Sign In
+              </button>
             )}
 
             {/* Quick Demo Switcher */}
@@ -75,19 +85,19 @@ export default function Header({
               <span className="text-[11px] font-semibold text-slate-400 px-1.5">Demo:</span>
               <button 
                 onClick={() => onSwitchRole('ADMIN')}
-                className={`px-2 py-1 rounded font-medium transition ${currentUser?.role === 'ADMIN' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+                className={`px-2 py-1 rounded font-medium transition ${userRole === 'ADMIN' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 Admin
               </button>
               <button 
                 onClick={() => onSwitchRole('STAFF')}
-                className={`px-2 py-1 rounded font-medium transition ${currentUser?.role === 'STAFF' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+                className={`px-2 py-1 rounded font-medium transition ${userRole === 'STAFF' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 Chef/Staff
               </button>
               <button 
                 onClick={() => onSwitchRole('STUDENT')}
-                className={`px-2 py-1 rounded font-medium transition ${currentUser?.role === 'STUDENT' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+                className={`px-2 py-1 rounded font-medium transition ${userRole === 'STUDENT' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 Student
               </button>

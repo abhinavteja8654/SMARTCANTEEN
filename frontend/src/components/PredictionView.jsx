@@ -39,7 +39,7 @@ export default function PredictionView({ onNavigateTo }) {
   const fetchExistingForecasts = async () => {
     try {
       const res = await api.get(`/predictions?date=${forecastDate}&mealType=${mealType}`);
-      if (res.data && res.data.length > 0) {
+      if (Array.isArray(res.data) && res.data.length > 0) {
         setForecasts(res.data);
       }
     } catch (err) {
@@ -58,7 +58,11 @@ export default function PredictionView({ onNavigateTo }) {
         specialEvent
       };
       const res = await api.post('/predictions/generate', payload);
-      setForecasts(res.data);
+      if (Array.isArray(res.data)) {
+        setForecasts(res.data);
+      } else {
+        throw new Error('Not an array');
+      }
     } catch (err) {
       console.error('Failed to run AI prediction', err);
       setErrorMsg('Failed to run prediction. Simulating algorithm locally for preview...');
@@ -245,21 +249,23 @@ export default function PredictionView({ onNavigateTo }) {
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {forecasts.map(fc => {
-              const isScheduled = scheduledItems[fc.foodItem.id];
+            {Array.isArray(forecasts) && forecasts.map(fc => {
+              const food = fc.foodItem || { id: fc.id, name: 'Menu Item', category: 'LUNCH' };
+              const foodId = food.id || fc.id;
+              const isScheduled = scheduledItems[foodId];
               return (
                 <div 
-                  key={fc.id || fc.foodItem.id}
+                  key={fc.id || foodId}
                   className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-emerald-300 transition"
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     
                     {/* Item Information */}
                     <div className="flex items-start gap-4 flex-1">
-                      {fc.foodItem.imageUrl ? (
+                      {food.imageUrl ? (
                         <img 
-                          src={fc.foodItem.imageUrl} 
-                          alt={fc.foodItem.name} 
+                          src={food.imageUrl} 
+                          alt={food.name} 
                           className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0" 
                         />
                       ) : (
@@ -270,9 +276,9 @@ export default function PredictionView({ onNavigateTo }) {
 
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-sm text-slate-900">{fc.foodItem.name}</h4>
+                          <h4 className="font-bold text-sm text-slate-900">{food.name}</h4>
                           <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                            {fc.foodItem.category}
+                            {food.category}
                           </span>
                         </div>
 

@@ -33,7 +33,7 @@ export default function WasteAnalyticsView() {
     try {
       setLoading(true);
       const res = await api.get('/waste/recent');
-      setLogs(res.data);
+      setLogs(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.warn('Using default demo waste logs', err);
       setLogs([
@@ -49,9 +49,10 @@ export default function WasteAnalyticsView() {
   const fetchFoodItems = async () => {
     try {
       const res = await api.get('/food-items');
-      setFoodItems(res.data);
-      if (res.data.length > 0) {
-        setNewLog(prev => ({ ...prev, foodItemId: res.data[0].id }));
+      const items = Array.isArray(res.data) ? res.data : [];
+      setFoodItems(items);
+      if (items.length > 0) {
+        setNewLog(prev => ({ ...prev, foodItemId: items[0].id }));
       }
     } catch (err) {
       console.warn('Using demo food items for waste log', err);
